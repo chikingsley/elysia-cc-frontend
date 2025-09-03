@@ -1,25 +1,20 @@
 "use client";
 
-export const host =
-  //http://localhost:8000
-  process.env.NEXT_PUBLIC_IS_STATIC !== "true" ? "http://localhost:8000" : "";
+// Use environment variable for backend URL, fallback to localhost for development
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
-export const public_path =
-  process.env.NEXT_PUBLIC_IS_STATIC !== "true" ? "/" : "/static/";
+export const host = BACKEND_URL;
+
+export const public_path = "/";
 
 export const getWebsocketHost = () => {
-  if (
-    process.env.NODE_ENV === "development" &&
-    process.env.NEXT_PUBLIC_IS_STATIC !== "true"
-  ) {
-    //172.17.202.220
+  // Parse the backend URL to get the WebSocket URL
+  try {
+    const url = new URL(BACKEND_URL);
+    const wsProtocol = url.protocol === "https:" ? "wss:" : "ws:";
+    return `${wsProtocol}//${url.host}/ws/`;
+  } catch {
+    // Fallback for development
     return `ws://localhost:8000/ws/`;
-  } else if (process.env.NEXT_PUBLIC_IS_STATIC === "true") {
-    // If you're serving the app directly through FastAPI, generate the WebSocket URL based on the current location.
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const current_host = window.location.host;
-    return `${protocol}//${current_host}/ws/`;
-  } else {
-    return `wss://localhost:8000/ws/`;
   }
 };

@@ -1,5 +1,5 @@
 const nextConfig = {
-  output: "export",
+  // Removed output: "export" to run as Node.js app on Vercel
   trailingSlash: false,
   webpack: (config, { isServer }) => {
     // Add a rule to handle .glsl files
