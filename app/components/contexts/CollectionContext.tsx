@@ -35,11 +35,12 @@ export const CollectionProvider = ({
   const initialFetch = useRef(false);
 
   useEffect(() => {
-    if (initialFetch.current || !id || !initialized) return;
+    if (initialFetch.current || !id) return;
     initialFetch.current = true;
     idRef.current = id;
+    // Don't wait for initialized flag - fetch immediately when we have an id
     fetchCollections();
-  }, [id, initialized]);
+  }, [id]);
 
   useEffect(() => {
     fetchCollections();

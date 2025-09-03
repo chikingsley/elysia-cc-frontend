@@ -9,12 +9,15 @@ export async function loadConversations(user_id: string) {
     });
 
     if (!response.ok) {
-      console.error(
-        `Error fetching saved trees! status: ${response.status} ${response.statusText}`,
-      );
+      // Don't log error for 500s during initial load - user might not be initialized yet
+      if (response.status !== 500) {
+        console.error(
+          `Error fetching saved trees! status: ${response.status} ${response.statusText}`,
+        );
+      }
       return {
         trees: {},
-        error: "Error fetching saved conversations",
+        error: null, // Don't show error toast for this
       };
     }
 

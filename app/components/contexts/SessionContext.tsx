@@ -186,25 +186,52 @@ export const SessionProvider = ({
     if (!id) {
       return;
     }
-    const user_object = await initializeUser(id);
     setLoadingConfig(true);
 
-    if (user_object.error) {
-      console.error(user_object.error);
-      showErrorToast("Failed to Initialize User", user_object.error);
+    // Parallelize the initialization and config fetching
+    const [user_object, configListResult] = await Promise.allSettled([
+      initializeUser(id),
+      getConfigList(id)
+    ]);
+
+    // Handle user initialization result
+    if (user_object.status === 'rejected' || (user_object.status === 'fulfilled' && user_object.value.error)) {
+      const error = user_object.status === 'rejected' 
+        ? user_object.reason 
+        : user_object.value.error;
+      console.error(error);
+      showErrorToast("Failed to Initialize User", error);
+      setLoadingConfig(false);
       return;
     }
+
+    const userValue = user_object.value;
 
     if (process.env.NODE_ENV === "development") {
       console.log("Initialized user with id: " + id);
     }
 
-    getConfigIDs(id);
+    // Handle config list result
+    if (configListResult.status === 'fulfilled' && !configListResult.value.error) {
+      const sortedConfigs = configListResult.value.configs.sort((a, b) => {
+        return (
+          new Date(b.last_update_time).getTime() -
+          new Date(a.last_update_time).getTime()
+        );
+      });
+      setConfigIDs(sortedConfigs);
+      setLoadingConfigs(false);
+    } else {
+      // If config list fails, log it but don't block
+      console.error("Failed to load config list during initialization");
+      // We'll retry if user navigates to settings page
+    }
+
     setUserConfig({
-      backend: user_object.config,
-      frontend: user_object.frontend_config,
+      backend: userValue.config,
+      frontend: userValue.frontend_config,
     });
-    setCorrectSettings(user_object.correct_settings);
+    setCorrectSettings(userValue.correct_settings);
     setLoadingConfig(false);
     showSuccessToast("User Initialized");
     initialized.current = true;

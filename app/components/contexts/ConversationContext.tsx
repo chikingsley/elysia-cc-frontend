@@ -867,11 +867,12 @@ export const ConversationProvider = ({
   }, [collections]);
 
   useEffect(() => {
-    if (id && !initial_ref.current && initialized) {
+    if (id && !initial_ref.current) {
       initial_ref.current = true;
+      // Don't wait for initialized - load conversations immediately
       loadConversationsFromDB();
     }
-  }, [id, initialized]);
+  }, [id]);
 
   useEffect(() => {
     loadConversationsFromDB();
